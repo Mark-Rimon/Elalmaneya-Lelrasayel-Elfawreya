@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build output
+frontend/dist/
+backend/dist/
+
+# Local database
+backend/*.db
+backend/*.db-*
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# OS/editor files
+.DS_Store
