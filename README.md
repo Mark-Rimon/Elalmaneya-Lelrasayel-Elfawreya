@@ -11,7 +11,7 @@
 - SQLite(20 minutes):https://youtu.be/8Xyn8R9eKB8?si=S_oCFkpQfERAIt1Z 
 - better-sqlite3(10 minutes):https://youtu.be/IooIXYf0PIo?si=Nqk0ccXzoF6I0SFM `[You should watch SQLite tutorial first]`
 - Docker(10 minutes):https://youtu.be/DQdB7wFEygo?si=bVDDtlMp3pARrohW
-- Docker-Compose(15 minutes):https://youtu.be/DM65_JyGxCo?si=DMQjtX4CILtV-2_9 `[This guy's video is painfully loud, also you should watch docker tutorial first]` 
+- Docker-Compose(15 minutes):https://youtu.be/DM65_JyGxCo?si=DMQjtX4CILtV-2_9 `[This guy's intro is painfully loud, also you should watch docker tutorial first]` 
 - Git&Github(15 minutes):https://youtu.be/HkdAHXoRtos?si=mSyMRvKOIkOW2_LV `[optional refresher]`
 
 Total Runtime: ~3 hours
