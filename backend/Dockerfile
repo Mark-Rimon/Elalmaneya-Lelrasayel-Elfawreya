@@ -1,4 +1,3 @@
-
 FROM node:22-bookworm-slim
 
 WORKDIR /app
@@ -15,8 +14,16 @@ RUN npm ci
 
 COPY tsconfig.json ./
 COPY src ./src
-
 RUN npm run build
+
+
+COPY DB ./DB
+
+ENV DB_PATH=/data/app.db
+ENV SCHEMA_PATH=/app/DB/schema.sql
+ENV DROP_PATH=/app/DB/drop.sql
+RUN mkdir -p /data
+VOLUME /data
 
 EXPOSE 3000
 
