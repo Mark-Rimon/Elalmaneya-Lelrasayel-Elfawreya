@@ -7,7 +7,7 @@ app.get("/", (_req, res) => {
 });
 
 //TODO: Remove this temporary test
-//register_new_user('abdallah-edris', null, '7abes eblis felkees', '1234');
+register_new_user('mark-rimon', 'marctangent', null, 'markgamed');
 
 app.get("/api/messages", (_req, res) => {
 
