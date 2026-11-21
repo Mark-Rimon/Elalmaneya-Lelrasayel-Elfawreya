@@ -1,13 +1,14 @@
 import { db, app, PORT } from './definition.js'
 import { readSQL } from './handleSQL.js'; 
-import { register_new_user } from './user_functionality.js';
-
-app.get("/", (_req, res) => {
-  res.json({ message: "Hello World!" });
-});
+import { register_new_user, edit_user, authenticate_user } from './user_functionality.js';
 
 //TODO: Remove this temporary test
-register_new_user('mark-rimon', 'marctangent', null, 'markgamed');
+const msg = authenticate_user('mark-rimon', '1234');
+
+app.get("/", (_req, res) => {
+  res.json({ message: msg });
+});
+
 
 app.get("/api/messages", (_req, res) => {
 

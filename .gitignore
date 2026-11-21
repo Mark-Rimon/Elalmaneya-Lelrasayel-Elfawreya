@@ -17,3 +17,6 @@ backend/*.db-*
 
 # OS/editor files
 .DS_Store
+
+# Obsidian stuff
+.obsidian
