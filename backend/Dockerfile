@@ -22,6 +22,8 @@ COPY DB ./DB
 ENV DB_PATH=/data/app.db
 ENV SCHEMA_PATH=/app/DB/schema.sql
 ENV DROP_PATH=/app/DB/drop.sql
+
+
 RUN mkdir -p /data
 VOLUME /data
 
