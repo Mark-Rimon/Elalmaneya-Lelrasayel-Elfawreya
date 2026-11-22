@@ -17,8 +17,6 @@ app.get("/", (_req, res) => {
 //NEW
 // register_new_user({username: 'omar-shehata-awad', password: 'Omar_12345', nickname: 'sacrifical lamb'});
 
-delete_user('omar-shehata-awad', 'Omar_12345');
-
 //Gotta wait till we can properly add chatrooms
 //send_message(2, 1, 'hello world!');
 

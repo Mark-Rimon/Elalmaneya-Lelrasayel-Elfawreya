@@ -56,7 +56,7 @@ export async function register_new_user (
         throw new Error("password too weak");
     }
 
-    const trimmed_username = new_user.username.trim();
+    const trimmed_username = new_user.username.toLowerCase().trim();
 
     if(!validate_username(trimmed_username)){
         throw new Error("Invalid Username")
@@ -108,7 +108,7 @@ export function edit_user(
 ,    changes: Partial<Omit<User, 'user_id'>>
 )           : number
 {
-    const new_username_trimmed = changes.username?.trim() || null;
+    const new_username_trimmed = changes.username?.toLowerCase().trim() || null;
 
     if(!validate_username(new_username_trimmed)){
         throw new Error("New username is invalid");
