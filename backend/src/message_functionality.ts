@@ -2,6 +2,8 @@ import { db } from './definition.js';
 import { prepSQL } from './handleSQL.js';
 
 
+//---SEND_MESSAGE---
+
 export function send_message(sender_id: number, chatroom_ID: number, content: string): void {
     // Checks whether the parameters are valid and throws an error if they aren't
     if (!sender_id || !chatroom_ID || !content) {
@@ -35,6 +37,8 @@ export function send_message(sender_id: number, chatroom_ID: number, content: st
 
 }
 
+//---CHECK_MESSAGE_RECENCY---
+
 function check_message_recency(message_id: number, hours = 1): boolean {
     const message = prepSQL('get_message_datetime.sql').get({ message_id }) as
         { exchange_time: string; exchange_date: string } | undefined;
@@ -54,4 +58,38 @@ function check_message_recency(message_id: number, hours = 1): boolean {
     
     // returns true if the message is within the accepted time frame, false otherwise
     return (message_date_time > cutoff_time) && (message_date_time <= current_time);
+}
+
+
+//---EDIT_MESSAGE---
+
+function edit_message(message_id: number, new_content: string): void {
+    const edit = db.transaction(() => {
+        if (!check_message_recency(message_id)) {
+            throw new Error('Message cannot be edited.');
+        }
+
+        prepSQL('edit_message.sql').run({
+            message_id,
+            content: new_content
+        });
+    });
+    
+   edit();
+}
+
+//---DELETE_MESSAGE---
+
+function delete_message(message_id: number): void {
+    const del = db.transaction(() => {
+        if (!check_message_recency(message_id)) {
+            throw new Error('Message cannot be deleted.');
+        }
+
+        prepSQL('delete_message.sql').run({
+            message_id
+        });
+    });
+    
+   del();
 }
