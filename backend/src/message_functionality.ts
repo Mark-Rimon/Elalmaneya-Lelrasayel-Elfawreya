@@ -34,3 +34,24 @@ export function send_message(sender_id: number, chatroom_ID: number, content: st
     createMessage();
 
 }
+
+function check_message_recency(message_id: number, hours = 1): boolean {
+    const message = prepSQL('get_message_datetime.sql').get({ message_id }) as
+        { exchange_time: string; exchange_date: string } | undefined;
+
+    if (!message) {
+        throw new Error('Message not found');
+    }
+
+    const { exchange_time, exchange_date } = message;
+
+    // Timezone is parsed in UTC so we can correctly compare the message time with the current time in UTC
+    const message_date_time = new Date(`${exchange_date}T${exchange_time}Z`).getTime(); // the 'Z' makes the date parse in UTC
+
+    const current_time = Date.now();
+    //check if the message is within the last [hours] hour(s) :)
+    const cutoff_time = current_time - hours * 60 * 60 * 1000;
+    
+    // returns true if the message is within the accepted time frame, false otherwise
+    return (message_date_time > cutoff_time) && (message_date_time <= current_time);
+}
