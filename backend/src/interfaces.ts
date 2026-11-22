@@ -24,6 +24,13 @@ export interface SelectedUser {
     password_hash: string;
 };
 
+export interface NewUser {
+    username: string;
+    password: string;
+    nickname: string | null;
+    bio:      string | null;
+}
+
 export interface Chatroom {
     readonly chatroom_id: number;
     name:                 string;
