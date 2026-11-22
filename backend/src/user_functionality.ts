@@ -1,10 +1,28 @@
 //---IMPORTS---
+
 import { User, UserUpdate, SelectedUser } from './interfaces.js';
-import { readSQL, prepSQL } from './handleSQL.js';
+import { prepSQL } from './handleSQL.js';
 import { hash, verify } from 'argon2'
 import { db } from './definition.js'
+import { passwordStrength } from 'check-password-strength'
+
+
+//---SELECT_USER---
+
+function select_account(username: string): SelectedUser{
+    const select_statement = prepSQL('accounts.sql');
+    const selected_account: SelectedUser = select_statement.get({username}) as SelectedUser;
+    
+    
+    if (!selected_account) {
+        throw new Error("account not found");
+    }
+
+    return selected_account;
+}
 
 //---REGISTER_NEW_USER---
+
 export async function register_new_user (
     username : string
 ,   nickname : string | null
@@ -12,6 +30,10 @@ export async function register_new_user (
 ,   password : string
 )   :  Promise<number> 
 {
+    if(passwordStrength(password).id < 2){
+        throw new Error("password too weak");
+    }
+
     const password_hash = await hash(password)
     //workaround for the hash function being async
 
@@ -23,6 +45,7 @@ export async function register_new_user (
 };
 
 //---REGISTER_NEW_USER_PRIVATE_HELPER---
+
 function register_new_user_helper(
        username : string
 ,      nickname : string | null
@@ -68,7 +91,7 @@ export function edit_user(
     return edit_user_helper(update_preferences);
 };
 
-//---EDIT_USER_HELPER---
+//---EDIT_USER_PRIVATE_HELPER---
 
 function edit_user_helper(update : UserUpdate) : number           
 {
@@ -88,14 +111,43 @@ export async function authenticate_user(
 ,   password_attempt : string
 )                    : Promise<boolean>
 {
-    const authenticate_statement = prepSQL('accounts.sql');
-    const selected_user: SelectedUser = authenticate_statement.get({username}) as SelectedUser;
-    
-    if (!selected_user) {
-        return false;
-    }
+    const selected_account = select_account(username);
 
-    const password_matches = await verify(selected_user.password_hash, password_attempt);
+    const password_matches = await verify(selected_account.password_hash, password_attempt);
 
     return password_matches;
 };
+
+//---CHANGE_PASSWORD---
+
+export async function change_password(
+    username            : string
+,   old_password        : string
+,   new_password        : string
+)                       : Promise<number>    
+{
+    const is_authenticated = await authenticate_user(username, old_password);
+    
+    if(!is_authenticated){
+        throw new Error("You got the old password wrong");
+    }
+
+    if(old_password === new_password){
+        return 0;
+    }    
+
+    if(passwordStrength(new_password).id < 2){
+        throw new Error("new password is too weak");
+    }
+
+    const user_id = select_account(username).user_id;
+    
+    
+    const new_password_hash = await hash(new_password);
+    
+    const change_statement = prepSQL('change_password.sql');
+    const change_info = change_statement.run({new_password_hash, user_id});
+    const return_code = change_info.changes;
+    
+    return return_code;
+}

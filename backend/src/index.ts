@@ -1,6 +1,6 @@
 import { db, app, PORT } from './definition.js'
 import { readSQL } from './handleSQL.js'; 
-import { register_new_user, edit_user, authenticate_user } from './user_functionality.js';
+import { register_new_user, edit_user, authenticate_user, change_password } from './user_functionality.js';
 import { send_message } from './message_functionality.js'
 
 //TODO: Remove this temporary test
@@ -18,11 +18,9 @@ app.get("/api/messages", (_req, res) => {
     const messages = db
     .prepare(`
         SELECT *
-        FROM Message M
-        INNER JOIN MessageExchange MA
-        ON M.message_id = MA.message_id
-        INNER JOIN User U
-        ON U.user_id = M.sender_id
+        FROM User U
+        INNER JOIN Registration R
+        ON U.user_id = R.user_id;
         `)
     .all();
 
