@@ -6,7 +6,6 @@ import { send_message } from './message_functionality.js'
 //TODO: Remove this temporary test
 const msg = await authenticate_user('abdallah-edris', '1234');
 
-
 app.get("/", (_req, res) => {
   res.json({ message: "User's password attempt returns: " + String(msg) });
 });

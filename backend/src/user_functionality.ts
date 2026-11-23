@@ -1,3 +1,129 @@
+/*
+===========================================================================
+-----------------------------USER_FUNCTIONALITY----------------------------
+
+This file contains all the functions needed to streamline and user interaction
+with the database down to simple functions
+
+===========================================================================
+
+USAGE:
+------
+If the file is in the same local directory as your
+add this import line at the beginning of your file
+
+import { register_new_user, edit_user, authenticate_user, change_password, delete_user } from './user_functionality.js';
+
+otherwise swap out the file location parameter
+
+===========================================================================
+DOCUMENTATION
+===========================================================================
+
+Exported Functions:
+-------------------
+
+register_new_user:
+    
+    SUMMARY:
+
+        takes mandatory username and password fields
+        and optional nickname and bio fields
+        uses the given input to establish a new user in the database
+
+    INPUT:
+    {
+        username: string
+        //each user has chooses their own unique username which they
+        //use for most user-related operations
+        //a username cannot contain any spaces
+        //a username cannot be of length < 3
+        //the username is automatically turned to lower-case 
+    
+    ,   password: string
+        //each user is verified using their chosen password
+        //the password cannot be considered too weak
+        //i.e too short or all in lower case or no symbols etc...
+        //the password hashed before being stored on the database
+    
+    ,   nickname: string
+        //the user can choose a nickname displayed on their profile
+        //the nickname field is optional 
+        //and can be ommitted from the function call
+    
+    ,   bio: string
+        //the user can add a short autobiography under their profile
+        //the bio field is optional
+        //and can be ommitted from the function call
+    }
+
+    OUTPUT: 
+        user_ip : number
+        //The new user's assigned user ip
+
+    EXAMPLE: 
+    
+        register_new_user({
+            username: 'mark-rimon'
+            password: 'Mark_12345'
+            nickname: 'mark'
+        })
+    
+    This registers a new user in the database with a null bio
+    
+    EXAMPLE2:
+
+        register_new_user({
+            username: 'mohamed-ayoub'
+            password: 'Mohamed_12345'
+        })
+
+    This registers a new user in the database with a null nickname and bio
+    
+    EXPECTED ERROR:
+        
+        register_new_user({
+            username: 'basel hatem'
+            password: 'Basel_12345'
+            bio: 'hello world!'
+        })
+        
+    REASON: Invalid username
+
+    EXPECTED ERROR2:
+
+        register_new_user({
+            username: 'mark-rimon'
+            password: 'Mark_12345'
+            bio: 'I am the real mark'
+        })
+
+    REASON: Duplicate username (assuming mark-rimon already exists in the database)
+
+    EXPECTED ERROR3:
+
+        register_new_user({
+            username: 'omar-shehata'
+            password: 'qwerty'
+        })
+
+    REASON: Password is deemed to be too weak
+
+    EXPECTED ERROR4:
+    
+        register_new_user({
+            password: 'Mina_12345'
+            nickname: 'Mina'
+            bio: 'who needs usernames anyway?'
+        })
+
+    REASON: One of the two mandatory fields is not provided (username)
+
+
+*/ 
+
+
+
 //---IMPORTS---
 
 import { User, UserUpdate, SelectedUser, NewUser } from './interfaces.js';
@@ -8,11 +134,10 @@ import { passwordStrength } from 'check-password-strength'
 
 //---INVALID_USERNAME_TEST---
 
-
-
 function validate_username(trimmed_username : string | null) : boolean{
 
     const INVALID_USERNAME = /[\p{White_Space}\p{Cf}\p{Cc}\p{Zl}\p{Zp}]/u;
+    //String containing all types of invalid characters (mostly empty spaces)
 
     if (trimmed_username === null){
         return true; //means username is unchanged
@@ -104,8 +229,8 @@ function register_new_user_helper(new_user: NewUser) : number
 //---EDIT_USER---
 
 export function edit_user(
-     user_id: number
-,    changes: Partial<Omit<User, 'user_id'>>
+    user_id: number
+,   changes: Partial<Omit<User, 'user_id'>>
 )           : number
 {
     const new_username_trimmed = changes.username?.toLowerCase().trim() || null;
