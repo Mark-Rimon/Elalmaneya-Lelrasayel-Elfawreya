@@ -4,17 +4,16 @@ import { register_new_user, edit_user, authenticate_user, change_password, delet
 import { send_message } from './message_functionality.js'
 
 //TODO: Remove this temporary test
-const msg = await authenticate_user('abdallah-edris', '1234');
+const msg = await authenticate_user('mark-rimon', 'Mark_12345');
 
 app.get("/", (_req, res) => {
   res.json({ message: "User's password attempt returns: " + String(msg) });
 });
 
-//OLD 
-// register_new_user('omar-shehata-awad', 'Omar_12345', 'sacrifical lamb', null);
-//No username validity check no password strength check and most importantly you had to enter null for no bio/nickname
-//NEW
-// register_new_user({username: 'omar-shehata-awad', password: 'Omar_12345', nickname: 'sacrifical lamb'});
+//register_new_user({username: 'youssef-salama', password: 'Youssef_12345', bio: 'top 10 dmet students oat'});
+//edit_user('youssef-salama', 'Youssef_12345', {bio: 'top 1 greatest dmet student oat'});
+//change_password('youSsef-saLama', 'Youssef_12345', 'Youssef_123456')
+//delete_user('Youssef-Salama', 'Youssef_123456');
 
 //Gotta wait till we can properly add chatrooms
 //send_message(2, 1, 'hello world!');
