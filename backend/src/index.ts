@@ -6,7 +6,7 @@ import { send_message } from './message_functionality.js'
 //TODO: Remove this temporary test
 //const msg = await authenticate_user('mark-rimon', 'Mark_12345');
 
-//db.exec(readSQL('drop.sql'));
+db.exec(readSQL('drop.sql'));
 //db.exec(readSQL('schema.sql'));
 
 app.get("/", (_req, res) => {

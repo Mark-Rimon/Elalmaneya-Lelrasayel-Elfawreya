@@ -54,9 +54,9 @@ CREATE TABLE IF NOT EXISTS MessageExchange (
 );
 
 CREATE TABLE IF NOT EXISTS Session (
-    token       TEXT PRIMARY KEY
-,   user_id     INTEGER NOT NULL
-,   expires_at  INTEGER NOT NULL
+    token         TEXT PRIMARY KEY
+,   user_id       INTEGER NOT NULL
+,   session_date  DATE NOT NULL DEFAULT CURRENT_DATE
 ,   FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
