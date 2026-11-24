@@ -1,4 +1,4 @@
-import express from 'express';
+import express  from 'express';
 import Database from "better-sqlite3";
 
 export const db = new Database(

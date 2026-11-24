@@ -60,8 +60,8 @@ register_new_user:
     }
 
     OUTPUT: 
-        user_id : number
-        //The new user's assigned user id
+        token : string
+        //The new user's assigned token for their session
 
     EXAMPLE: 
     
@@ -326,15 +326,27 @@ delete_user:
 ---IMPORTS---
 =========================================================================
 */
-import { User, UserUpdate, SelectedUser, NewUser } from './interfaces.js';
-import { prepSQL } from './handleSQL.js';
-import { hash, verify } from 'argon2'
-import { db } from './definition.js'
+import { User
+       , UserUpdate
+       , SelectedUser
+       , NewUser          } from './interfaces.js';
+import { prepSQL          } from './handleSQL.js';
+import { hash
+       , verify           } from 'argon2'
+import { db               } from './definition.js'
 import { passwordStrength } from 'check-password-strength'
-
-//---INVALID_USERNAME_TEST---
-
-function validate_username(trimmed_username : string | null) : boolean{
+import { Statement
+       , RunResult        } from 'better-sqlite3';
+import   crypto           from 'node:crypto';
+/*
+=========================================================================
+---INVALID_USERNAME_TEST---
+=========================================================================
+*/
+function validate_username(
+        trimmed_username : string | null
+    )                    : boolean
+    {
 
     const INVALID_USERNAME = /[\p{White_Space}\p{Cf}\p{Cc}\p{Zl}\p{Zp}]/u;
     //String containing all types of invalid characters (mostly empty spaces)
@@ -361,8 +373,11 @@ function validate_username(trimmed_username : string | null) : boolean{
 ---SELECT_USER---
 =========================================================================
 */
-export function select_account(username: string): SelectedUser{
-    const select_statement = prepSQL('accounts.sql');
+export function select_account(
+        username: string
+    )           : SelectedUser
+    {
+    const select_statement : Statement = prepSQL('accounts.sql');
     const selected_account: SelectedUser = select_statement.get({username}) as SelectedUser;
     
     
@@ -379,7 +394,7 @@ export function select_account(username: string): SelectedUser{
 */
 export async function register_new_user (
     new_user: Pick<NewUser, 'username' | 'password'> & Partial<Omit<NewUser, 'username' | 'password'>>
-)   :  Promise<number> 
+)           :  Promise<string> 
 {
     if(passwordStrength(new_user.password).id < 2){
         throw new Error("password too weak");
@@ -391,7 +406,7 @@ export async function register_new_user (
         throw new Error("Invalid Username")
     }
 
-    const password_hash = await hash(new_user.password)
+    const password_hash: string = await hash(new_user.password)
 
     const new_user_preferences: NewUser  = {
         username: trimmed_username
@@ -407,21 +422,21 @@ export async function register_new_user (
 ---REGISTER_NEW_USER_PRIVATE_HELPER---
 =========================================================================
 */
-function register_new_user_helper(new_user: NewUser) : number
+function register_new_user_helper(new_user: NewUser) : string
 {
     const { password: password_hash, ...new_user_details} = new_user;
 
 
     //read and prepare user and registry statements
-    const add_user_statement = prepSQL('add_user.sql')
-    const add_registry_statement = prepSQL('add_registry.sql');
+    const add_user_statement    : Statement = prepSQL('add_user.sql')
+    const add_registry_statement: Statement = prepSQL('add_registry.sql');
 
      
     //wrap both queries in a transaction
     const run = db.transaction(function(): number {    
     
-        const user_info = add_user_statement.run(new_user_details);
-        const user_id   = Number(user_info.lastInsertRowid);
+        const user_info : RunResult = add_user_statement.run(new_user_details);
+        const user_id   : number    = Number(user_info.lastInsertRowid);
     
         add_registry_statement.run({user_id, password_hash});
     
@@ -429,7 +444,14 @@ function register_new_user_helper(new_user: NewUser) : number
 
     });
 
-    return run();
+    const user_id          : number    = run();
+    
+    const token            : string    = crypto.randomBytes(32).toString('hex');
+    
+    const create_statement : Statement = prepSQL('create_session.sql');
+    create_statement.run({user_id, token});
+
+    return token;
 };
 /*
 =========================================================================
@@ -442,9 +464,9 @@ export async function edit_user(
 ,   changes  : Partial<Omit<User, 'user_id'>>
 )            : Promise<number>
 {
-    const new_username_trimmed = changes.username?.toLowerCase().trim() || null;
-    const old_username_trimmed = username.toLowerCase().trim()
-    const user_id = select_account(old_username_trimmed).user_id;
+    const new_username_trimmed : string|null = changes.username?.toLowerCase().trim() || null;
+    const old_username_trimmed : string|null = username.toLowerCase().trim()
+    const user_id              : number      = select_account(old_username_trimmed).user_id;
 
     if(!(await authenticate_user(old_username_trimmed, password))){
         throw new Error("incorrect password/username");
@@ -471,9 +493,9 @@ export async function edit_user(
 function edit_user_helper(update : UserUpdate) : number           
 {
 
-    const edit_user_statement = prepSQL('edit_user.sql');
-    const edit_info           =  edit_user_statement.run(update);
-    const edit_changes        = edit_info.changes; 
+    const edit_user_statement : Statement = prepSQL('edit_user.sql');
+    const edit_info           : RunResult = edit_user_statement.run(update);
+    const edit_changes        : number    = edit_info.changes; 
 
     return edit_changes; //return 1 if a change happens return 0 otherwise
 
@@ -488,9 +510,9 @@ export async function authenticate_user(
 ,   password_attempt : string
 )                    : Promise<boolean>
 {
-    const selected_account = select_account(username);
+    const selected_account : SelectedUser = select_account(username);
 
-    const password_matches = await verify(selected_account.password_hash, password_attempt);
+    const password_matches : boolean      = await verify(selected_account.password_hash, password_attempt);
 
     return password_matches;
 };
@@ -506,7 +528,7 @@ export async function change_password(
 )                       : Promise<number>    
 {
     username = username.trim().toLowerCase();
-    const is_authorised = await authenticate_user(username, old_password);
+    const is_authorised :  boolean = await authenticate_user(username, old_password);
     
     if(!is_authorised){
         throw new Error("You got the old password wrong");
@@ -520,14 +542,13 @@ export async function change_password(
         throw new Error("new password is too weak");
     }
 
-    const user_id = select_account(username).user_id;
+    const user_id           : number    = select_account(username).user_id;
     
+    const new_password_hash : string    = await hash(new_password);
     
-    const new_password_hash = await hash(new_password);
-    
-    const change_statement = prepSQL('change_password.sql');
-    const change_info = change_statement.run({new_password_hash, user_id});
-    const return_code = change_info.changes;
+    const change_statement  : Statement = prepSQL('change_password.sql');
+    const change_info       : RunResult = change_statement.run({new_password_hash, user_id});
+    const return_code       : number    = change_info.changes;
     
     return return_code;
 }
@@ -550,11 +571,11 @@ export async function delete_user(
         throw new Error("Incorrect password/username");
     };
 
-    const user_id = select_account(username).user_id;
+    const user_id          : number    = select_account(username).user_id;
 
-    const delete_statement = prepSQL('delete_user.sql');
-    const delete_info = delete_statement.run({user_id});
-    const delete_changes = delete_info.changes;
+    const delete_statement : Statement = prepSQL('delete_user.sql');
+    const delete_info      : RunResult = delete_statement.run({user_id});
+    const delete_changes   : number    = delete_info.changes;
 
     return delete_changes;
 }
