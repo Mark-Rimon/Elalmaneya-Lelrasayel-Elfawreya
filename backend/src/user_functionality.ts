@@ -361,7 +361,7 @@ function validate_username(trimmed_username : string | null) : boolean{
 ---SELECT_USER---
 =========================================================================
 */
-function select_account(username: string): SelectedUser{
+export function select_account(username: string): SelectedUser{
     const select_statement = prepSQL('accounts.sql');
     const selected_account: SelectedUser = select_statement.get({username}) as SelectedUser;
     

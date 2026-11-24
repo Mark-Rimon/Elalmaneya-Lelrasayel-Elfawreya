@@ -4,10 +4,13 @@ import { register_new_user, edit_user, authenticate_user, change_password, delet
 import { send_message } from './message_functionality.js'
 
 //TODO: Remove this temporary test
-const msg = await authenticate_user('mark-rimon', 'Mark_12345');
+//const msg = await authenticate_user('mark-rimon', 'Mark_12345');
+
+//db.exec(readSQL('drop.sql'));
+//db.exec(readSQL('schema.sql'));
 
 app.get("/", (_req, res) => {
-  res.json({ message: "User's password attempt returns: " + String(msg) });
+  res.json({ message: 'Hello World!'});
 });
 
 //register_new_user({username: 'youssef-salama', password: 'Youssef_12345', bio: 'top 10 dmet students oat'});

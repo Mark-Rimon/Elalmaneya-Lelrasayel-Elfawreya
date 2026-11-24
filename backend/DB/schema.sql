@@ -53,4 +53,11 @@ CREATE TABLE IF NOT EXISTS MessageExchange (
 ,   FOREIGN KEY (chatroom_id) REFERENCES Chatroom(chatroom_id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS Session (
+    token       TEXT PRIMARY KEY
+,   user_id     INTEGER NOT NULL
+,   expires_at  INTEGER NOT NULL
+,   FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
 

@@ -37,6 +37,12 @@ export interface Chatroom {
     bio:                  string | null;
 };
 
+export interface NewChatroom {
+    creator_username :   string;
+    name             :   string;
+    bio              :   string | null;
+};
+
 export interface Message {
     readonly message_id: number;
     readonly sender_id:  number;
