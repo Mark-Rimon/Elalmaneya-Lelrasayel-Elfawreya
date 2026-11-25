@@ -34,12 +34,12 @@ CREATE TABLE IF NOT EXISTS ChatroomCreation (
 ,   creator_id INTEGER
 ,   creation_date DATE NOT NULL DEFAULT CURRENT_DATE
 ,   FOREIGN KEY (creator_id) REFERENCES User(user_id) ON DELETE SET NULL
-,   FOREIGN KEY (chatroom_id) REFERENCES Chatroom(chatroom_id) ON DELETE SET NULL
+,   FOREIGN KEY (chatroom_id) REFERENCES Chatroom(chatroom_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Message (
     message_id INTEGER PRIMARY KEY AUTOINCREMENT
-,   sender_id INTEGER NOT NULL
+,   sender_id INTEGER
 ,   content TEXT NOT NULL
 ,   FOREIGN KEY (sender_id) REFERENCES User(user_id) ON DELETE SET NULL
 );
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS Session (
     token         TEXT PRIMARY KEY
 ,   user_id       INTEGER NOT NULL
 ,   session_date  DATE NOT NULL DEFAULT CURRENT_DATE
-,   FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+,   FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE
 );
 
 

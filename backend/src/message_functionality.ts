@@ -39,7 +39,7 @@ export function send_message(sender_id: number, chatroom_ID: number, content: st
 
 //---CHECK_MESSAGE_RECENCY---
 
-function check_message_recency(message_id: number, hours = 1): boolean {
+export function check_message_recency(message_id: number, hours = 1): boolean {
     const message = prepSQL('get_message_datetime.sql').get({ message_id }) as
         { exchange_time: string; exchange_date: string } | undefined;
 
@@ -63,7 +63,7 @@ function check_message_recency(message_id: number, hours = 1): boolean {
 
 //---EDIT_MESSAGE---
 
-function edit_message(message_id: number, new_content: string): void {
+export function edit_message(message_id: number, new_content: string): void {
     const edit = db.transaction(() => {
         if (!check_message_recency(message_id)) {
             throw new Error('Message cannot be edited.');
@@ -80,7 +80,7 @@ function edit_message(message_id: number, new_content: string): void {
 
 //---DELETE_MESSAGE---
 
-function delete_message(message_id: number): void {
+export function delete_message(message_id: number): void {
     const del = db.transaction(() => {
         if (!check_message_recency(message_id)) {
             throw new Error('Message cannot be deleted.');
