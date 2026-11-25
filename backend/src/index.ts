@@ -1,5 +1,7 @@
-import { db
+import { io 
+       , db
        , app
+       , server
        , PORT          } from './definition.js';
 import { readSQL       } from './handleSQL.js'; 
 import { register_new_user
@@ -42,11 +44,15 @@ app.get("/api/messages", (_req, res) => {
 
 });
 
+io.on('connection', (socket) => {
+    console.log(`HI MOM!`);
+  });
+
 /*
 QoL after running `docker compose up --build` print the backend URL
 */
 
-app.listen(PORT, "0.0.0.0", () => {
+server.listen(PORT, "0.0.0.0", () => {
 
     console.log(`Server running on http://localhost:${PORT}`);
   
