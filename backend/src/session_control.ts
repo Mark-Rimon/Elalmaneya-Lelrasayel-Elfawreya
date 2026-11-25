@@ -63,7 +63,7 @@ export function log_out(
 )            : number
 {
 
-    if(validate_session(username, token)){
+    if(!validate_session(username, token)){
         throw new Error("invalid token");
     };
 
@@ -87,7 +87,7 @@ export function log_all_out(
 )            : number
 {
 
-    if(validate_session(username, token)){
+    if(!validate_session(username, token)){
         throw new Error("invalid token");
     };
 
