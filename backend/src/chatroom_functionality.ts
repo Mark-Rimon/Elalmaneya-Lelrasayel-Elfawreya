@@ -131,3 +131,47 @@ export function add_chatroom_member(
 
     add_member_transaction();
 }
+
+/*
+=========================================================================
+---SET_CHATROOM_ADMIN---
+=========================================================================
+*/
+
+export function set_chatroom_admin(
+    requester_username: string,
+    token: string,
+    chatroom_id: number,
+    member_username: string,
+    admin_permission: number
+)   : void
+{
+    const requester_id = get_authenticated_user_id(requester_username, token);
+    const member_id = select_account(member_username.trim().toLowerCase()).user_id;
+    check_valid_chatroom_id(chatroom_id);
+
+    if (admin_permission !== 0 && admin_permission !== 1) {
+        throw new Error('Admin permission must be 0 or 1');
+    }
+
+    const set_admin_transaction = db.transaction(() => {
+        check_chatroom_exists(chatroom_id);
+
+        if (!is_chatroom_creator(chatroom_id, requester_id)) {
+            throw new Error('Only the chatroom creator can change admin permissions');
+        }
+
+        if (get_member_permission(chatroom_id, member_id) === undefined) {
+            throw new Error('User must be a chatroom member before changing permissions');
+        }
+
+        prepSQL('set_chatroom_admin.sql').run({
+            chatroom_id,
+            member_id,
+            admin_permission
+        });
+    });
+
+    set_admin_transaction();
+}
+
