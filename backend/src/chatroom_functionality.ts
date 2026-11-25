@@ -150,10 +150,6 @@ export function set_chatroom_admin(
     const member_id = select_account(member_username.trim().toLowerCase()).user_id;
     check_valid_chatroom_id(chatroom_id);
 
-    if (admin_permission !== 0 && admin_permission !== 1) {
-        throw new Error('Admin permission must be 0 or 1');
-    }
-
     const set_admin_transaction = db.transaction(() => {
         check_chatroom_exists(chatroom_id);
 
@@ -173,5 +169,55 @@ export function set_chatroom_admin(
     });
 
     set_admin_transaction();
+}
+
+/*
+=========================================================================
+---EDIT_CHATROOM---
+=========================================================================
+*/
+
+export function edit_chatroom(
+    requester_username: string,
+    token: string,
+    chatroom_id: number,
+    changes: Partial<Pick<NewChatroom, 'name' | 'bio'>>
+)   : void 
+{
+    const requester_id = get_authenticated_user_id(requester_username, token);
+    check_valid_chatroom_id(chatroom_id);
+
+    const update_name = changes.name !== undefined;
+    const update_bio = changes.bio !== undefined;
+    if (!update_name && !update_bio) {
+        throw new Error('At least one chatroom field must be provided');
+    }
+
+    const name = changes.name?.trim() ?? null;
+    if (update_name && !name) {
+        throw new Error('Chatroom name cannot be empty');
+    }
+
+    const bio = update_bio ? changes.bio?.trim() || null : null;
+
+    const edit_chatroom_transaction = db.transaction(() => {
+        check_chatroom_exists(chatroom_id);
+
+        const is_creator = is_chatroom_creator(chatroom_id, requester_id);
+        const is_admin = get_member_permission(chatroom_id, requester_id) === 1;
+        if (!is_creator && !is_admin) {
+            throw new Error('Only the creator or a chatroom admin can edit the chatroom');
+        }
+
+        prepSQL('edit_chatroom.sql').run({
+            chatroom_id,
+            name,
+            bio,
+            update_name: update_name ? 1 : 0,
+            update_bio: update_bio ? 1 : 0
+        });
+    });
+
+    edit_chatroom_transaction();
 }
 
