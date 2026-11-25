@@ -93,3 +93,41 @@ export function create_chatroom(
     return create_chatroom_transaction();
 };
 
+
+/*
+=========================================================================
+---ADD_CHATROOM_MEMBER---
+=========================================================================
+*/
+
+export function add_chatroom_member(
+    requester_username: string,
+    token: string,
+    chatroom_id: number,
+    member_username: string
+)   : void 
+{
+    const requester_id = get_authenticated_user_id(requester_username, token);
+    const member_id = select_account(member_username.trim().toLowerCase()).user_id;
+    check_valid_chatroom_id(chatroom_id);
+
+    const add_member_transaction = db.transaction(() => {
+        check_chatroom_exists(chatroom_id);
+
+        if (get_member_permission(chatroom_id, requester_id) === undefined) {
+            throw new Error('Only chatroom members can add members');
+        }
+
+        if (get_member_permission(chatroom_id, member_id) !== undefined) {
+            throw new Error('User is already a chatroom member');
+        }
+
+        prepSQL('add_chatroom_member.sql').run({
+            chatroom_id,
+            member_id,
+            admin_permission: 0
+        });
+    });
+
+    add_member_transaction();
+}
