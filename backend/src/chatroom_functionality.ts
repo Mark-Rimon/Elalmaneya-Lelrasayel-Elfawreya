@@ -150,6 +150,10 @@ export function set_chatroom_admin(
     const member_id = select_account(member_username.trim().toLowerCase()).user_id;
     check_valid_chatroom_id(chatroom_id);
 
+    if (admin_permission !== 0 && admin_permission !== 1) {
+        throw new Error('Admin permission must be 0 or 1');
+    }
+
     const set_admin_transaction = db.transaction(() => {
         check_chatroom_exists(chatroom_id);
 
@@ -221,3 +225,32 @@ export function edit_chatroom(
     edit_chatroom_transaction();
 }
 
+
+/*
+=========================================================================
+---DELETE_CHATROOM---
+=========================================================================
+*/
+
+export function delete_chatroom(
+    requester_username: string,
+    token: string,
+    chatroom_id: number
+)   : void 
+{
+    const requester_id = get_authenticated_user_id(requester_username, token);
+    check_valid_chatroom_id(chatroom_id);
+
+    const delete_chatroom_transaction = db.transaction(() => {
+        check_chatroom_exists(chatroom_id);
+
+        if (!is_chatroom_creator(chatroom_id, requester_id)) {
+            throw new Error('Only the chatroom creator can delete the chatroom');
+        }
+
+        prepSQL('delete_chatroom_messages.sql').run({ chatroom_id });
+        prepSQL('delete_chatroom.sql').run({ chatroom_id });
+    });
+
+    delete_chatroom_transaction();
+}
