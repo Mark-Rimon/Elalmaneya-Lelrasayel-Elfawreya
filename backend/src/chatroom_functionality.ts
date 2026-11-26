@@ -3,12 +3,11 @@
 ---IMPORTS---
 =========================================================================
 */
-import { select_account } from './user_functionality.js'
-import { NewChatroom    } from './interfaces.js';
-import { prepSQL        } from './handleSQL.js';
-import { db             } from './definition.js'
-import { validate_session } from './session_control.js';
-
+import { select_account
+       , authenticate_session } from './authentication.js'
+import { NewChatroom          } from './interfaces.js';
+import { prepSQL              } from './handleSQL.js';
+import { db                   } from './definition.js'
 /*
 ==========================================================================
 ---HELPER FUNCTIONS---
@@ -22,7 +21,7 @@ function get_authenticated_user_id(username: string, token: string): number {
     }
 
     const user_id = select_account(normalized_username).user_id;
-    if (!validate_session(normalized_username, token)) {
+    if (!authenticate_session(normalized_username, token)) {
         throw new Error('Invalid session');
     }
 

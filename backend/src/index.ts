@@ -2,32 +2,31 @@ import { io
        , db
        , app
        , server
-       , PORT          } from './definition.js';
-import { readSQL       } from './handleSQL.js'; 
-import { register_new_user
-       , edit_user
-       , authenticate_user
-       , change_password
-       , delete_user  }  from './user_functionality.js';
-import { send_message }  from './message_functionality.js';
+       , PORT          
+       , local_ip
+       , print_network_addresses } from './definition.js';
+import { readSQL                 } from './handleSQL.js';
+import { Socket                  } from 'socket.io';
 
-//TODO: Remove this temporary test
-//const msg = await authenticate_user('mark-rimon', 'Mark_12345');
+//Print the docker bridge ip for backend       
+server.listen(PORT, "0.0.0.0", () => {       
+   console.log(`Server running on http://${local_ip}:${PORT}`);
+});
 
-//db.exec(readSQL('drop.sql'));
-//db.exec(readSQL('schema.sql'));
+//print the network address to connect to from other devices
+print_network_addresses();
 
+//update schema if something's new
+db.exec(readSQL('schema.sql'));
+
+/*
+=========================================================================
+---TESTING_SECTION---
+=========================================================================
+*/
 app.get("/", (_req, res) => {
   res.json({ message: 'Hello World!'});
 });
-
-//register_new_user({username: 'youssef-salama', password: 'Youssef_12345', bio: 'top 10 dmet students oat'});
-//edit_user('youssef-salama', 'Youssef_12345', {bio: 'top 1 greatest dmet student oat'});
-//change_password('youSsef-saLama', 'Youssef_12345', 'Youssef_123456')
-//delete_user('Youssef-Salama', 'Youssef_123456');
-
-//Gotta wait till we can properly add chatrooms
-//send_message(2, 1, 'hello world!');
 
 app.get("/api/messages", (_req, res) => {
 
@@ -44,16 +43,9 @@ app.get("/api/messages", (_req, res) => {
 
 });
 
-io.on('connection', (socket) => {
-    console.log(`HI MOM!`);
-  });
 
-/*
-QoL after running `docker compose up --build` print the backend URL
-*/
-
-server.listen(PORT, "0.0.0.0", () => {
-
-    console.log(`Server running on http://localhost:${PORT}`);
-  
+io.on('connection', (socket: Socket) => {
+    console.log(`socket: ${socket} says hi`);
 });
+
+
