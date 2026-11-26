@@ -13,7 +13,7 @@ USAGE:
 If the file is in the same local directory as your
 add this import line at the beginning of your file
 
-import { register_new_user, edit_user, authenticate_user, change_password, delete_user } from './user_functionality.js';
+import { register_new_user, edit_user, change_password, delete_user } from './user_functionality.js';
 
 otherwise swap out the file location parameter
 
@@ -180,45 +180,6 @@ edit_user:
     
     REASON: Incorrect Username/Password
 
-authenticate_user:
-
-    SUMMARY:
-
-        takes a username and a password attempt
-        and checks the attempt against the stored password hash
-        returns true if they match and false otherwise
-        authenticate_user is an asynchronous function!
-
-    INPUT:
-    (
-        username         : string
-        //the username of the account to check
-        //it is NOT trimmed or turned to lower-case for you
-        //so pass it in already lower-case
-
-    ,   password_attempt : string
-        //the plain-text password to test
-        //it is verified against the hash stored on the database
-    )
-
-    OUTPUT:
-        password_matches : boolean
-        //true if the password is correct, false if it is wrong
-
-    EXAMPLE:
-
-        authenticate_user('mark-rimon', 'Mark_12345')
-
-    This resolves to true if Mark_12345 is mark-rimon's password
-    and to false if it is not
-
-    EXPECTED ERROR:
-
-        authenticate_user('nobody-here', 'Whatever_123')
-
-    REASON: Account not found (a wrong password does NOT throw,
-    it just returns false, but a username that doesn't exist does)
-
 change_password:
 
     SUMMARY:
@@ -328,65 +289,17 @@ delete_user:
 */
 import { User
        , UserUpdate
-       , SelectedUser
        , NewUser          } from './interfaces.js';
 import { prepSQL          } from './handleSQL.js';
-import { hash
-       , verify           } from 'argon2'
+import { hash             } from 'argon2'
 import { db               } from './definition.js'
 import { passwordStrength } from 'check-password-strength'
 import { Statement
        , RunResult        } from 'better-sqlite3';
-import   crypto           from 'node:crypto';
-/*
-=========================================================================
----INVALID_USERNAME_TEST---
-=========================================================================
-*/
-function validate_username(
-        trimmed_username : string | null
-    )                    : boolean
-    {
-
-    const INVALID_USERNAME = /[\p{White_Space}\p{Cf}\p{Cc}\p{Zl}\p{Zp}]/u;
-    //String containing all types of invalid characters (mostly empty spaces)
-
-    if (trimmed_username === null){
-        return true; //means username is unchanged
-    };
-
-    trimmed_username = String(trimmed_username);
-
-    if(trimmed_username.length < 3){
-        return false;
-    };
-
-    if(INVALID_USERNAME.test(trimmed_username)){
-        return false;    
-    };
-    
-    return true;
-
-};
-/*
-=========================================================================
----SELECT_USER---
-=========================================================================
-*/
-export function select_account(
-        username: string
-    )           : SelectedUser
-    {
-    const select_statement : Statement = prepSQL('accounts.sql');
-    const selected_account: SelectedUser = select_statement.get({username}) as SelectedUser;
-    
-    
-    if (!selected_account) {
-        throw new Error("account not found");
-    }
-
-    return selected_account;
-}
+import { authenticate_user
+       , validate_username
+       , select_account   
+       , create_session   } from './authentication.js';
 /*
 =========================================================================
 ---REGISTER_NEW_USER---
@@ -445,11 +358,7 @@ function register_new_user_helper(new_user: NewUser) : string
     });
 
     const user_id          : number    = run();
-    
-    const token            : string    = crypto.randomBytes(32).toString('hex');
-    
-    const create_statement : Statement = prepSQL('create_session.sql');
-    create_statement.run({user_id, token});
+    const token            : string    = create_session(user_id);
 
     return token;
 };
@@ -500,22 +409,7 @@ function edit_user_helper(update : UserUpdate) : number
     return edit_changes; //return 1 if a change happens return 0 otherwise
 
 };
-/*
-=========================================================================
----AUTHENTICATE_USER---
-=========================================================================
-*/
-export async function authenticate_user(
-    username         : string
-,   password_attempt : string
-)                    : Promise<boolean>
-{
-    const selected_account : SelectedUser = select_account(username);
 
-    const password_matches : boolean      = await verify(selected_account.password_hash, password_attempt);
-
-    return password_matches;
-};
 /*
 =========================================================================
 ---CHANGE_PASSWORD---

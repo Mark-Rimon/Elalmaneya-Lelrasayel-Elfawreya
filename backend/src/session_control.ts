@@ -14,7 +14,7 @@ USAGE:
 If the file is in the same local directory as your
 add this import line at the beginning of your file
 
-import { log_in, validate_session, log_out, log_all_out } from './session_control.js';
+import { log_in, log_out, log_all_out } from './session_control.js';
 
 otherwise swap out the file location parameter
 
@@ -30,7 +30,7 @@ log_in:
     SUMMARY:
 
         Once a user has created their account and added it to our database they may use this account
-        by logging into it, this function generates a token that says... 
+        by logging into it, this function calls create_session that generates a token that says... 
         "I'm this user you don't need to ask me for my password again"
 
     INPUT:
@@ -72,56 +72,6 @@ log_in:
         )
 
     REASON: user is not saved in our database (should be redirected to register their account)
-
-validate_session:
-
-    SUMMARY:
-        
-        similar to validate_user validate session is an intermediate function
-        that you call for security reason, only instead of validating the user using their password
-        it validates the user using their session's token, this means it quietly takes the cookie from their browser
-        and uses it to double check they're logged in (without needing to prompt the user)
-
-    INPUT:
-
-        username : string
-        //do not prompt the user for their username pull it from the db instead
-        token : string
-        //the session token to validate the user
-        //do not prompt the user for their token (they don't even memorise it)
-        //instead pull it from their browser cookie
-
-    OUTPUT:
-
-        confirmation : boolean
-        //whether the token matches a session token in our database or not
-
-    EXAMPLE:
-
-        validate_session(
-           'mark-rimon'
-        ,  'right_token' 
-        )
-
-        //returns true
-
-    EXAMPLE2:
-
-        validate_session(
-            'mark-rimon'
-        ,   'wrong_token'
-        )
-
-        //returns false
-
-    EXPECTED_ERROR:
-
-        validate_session(
-            'im-logged-out'
-        ,   'token'
-        )
-
-    REASON: no session found
 
 log_out and log_all_out
 
@@ -180,8 +130,9 @@ log_out and log_all_out
             'invalid-token'
         )
 
-        REASON: invalid token
+    REASON: invalid token
 
+======================================================================================================================================================
 /*
 =========================================================================
 ---IMPORTS---
@@ -189,10 +140,12 @@ log_out and log_all_out
 */
 import { Statement
        , RunResult      } from "better-sqlite3";
-import { authenticate_user
-       , select_account } from './user_functionality.js';
 import { prepSQL        } from './handleSQL.js';
-import   crypto           from 'node:crypto';
+import { authenticate_user
+       , authenticate_session
+       , select_account 
+       , create_session } from './authentication.js';
+
 /*
 =========================================================================
 ---LOG_IN---
@@ -208,34 +161,11 @@ export async function log_in(
     }
 
     const user_id          : number    = select_account(username).user_id;
-    const token            : string    = crypto.randomBytes(32).toString('hex');
-
-    const create_statement : Statement = prepSQL('create_session.sql');
-    create_statement.run({user_id, token});
-
+    const token            : string    = create_session(user_id);
     return token;
 
 }
-/*
-=========================================================================
----VALIDATE_SESSION---
-=========================================================================
-*/
-export function validate_session(
-    username : string
-,   token    : string
-)            : boolean
-{
-    const user_id         : number    = select_account(username).user_id
-    
-    const check_statement : Statement = prepSQL('check_session.sql');
-    const check_result    : RunResult = check_statement.run({token, user_id});
-    
-    if(!check_result){
-        return false;
-    }
-    return true;
-}
+
 /*
 =========================================================================
 ---LOG_OUT---
@@ -247,7 +177,7 @@ export function log_out(
 )            : number
 {
 
-    if(!validate_session(username, token)){
+    if(!authenticate_session(username, token)){
         throw new Error("invalid token");
     };
 
@@ -271,7 +201,7 @@ export function log_all_out(
 )            : number
 {
 
-    if(!validate_session(username, token)){
+    if(!authenticate_session(username, token)){
         throw new Error("invalid token");
     };
 
